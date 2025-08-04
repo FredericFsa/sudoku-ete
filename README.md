@@ -1,124 +1,106 @@
+# ☀️ Sudoku SaaS – Été 2025
 
-# ☀️ Sudoku d'Été - Web App (Flask)
-[![Site en ligne](https://img.shields.io/badge/🟢%20Sudoku%20en%20ligne-Render.com-brightgreen?style=flat&logo=flask)](https://sudoku-ete.onrender.com)
-
-
-Un jeu **Sudoku en ligne**, conçu avec ❤️ pour jouer n'importe où — y compris sur la plage 🏖️.  
-Choisissez la **taille de la grille** (4x4, 9x9, 16x16), la **difficulté**, jouez dans votre navigateur, imprimez, vérifiez, recommencez !
+Une application web en Python/Flask pour jouer au Sudoku sur toutes les tailles de grille :  
+**4x4**, **9x9**, **16x16**, jusqu'à **25x25**, avec des fonctionnalités modernes, propres et imprimables !
 
 ---
 
-## 🎮 Fonctionnalités
+## 🚀 Fonctionnalités
 
-- 🧩 **3 tailles de grilles** disponibles : 4x4, 9x9, 16x16
-- 🎚️ **5 niveaux de difficulté** : Facile → Très compliqué
-- 🎨 **Thème été** doux et responsive
-- ✅ Vérification automatique de la grille remplie
-- 🔍 Vérification si la grille est complète
-- 🖨️ Impression de la **grille de jeu**
-- 🧠 Impression **silencieuse** de la solution complète
-- 🧹 Bouton pour réinitialiser les entrées
-- 🔄 Bouton “Nouvelle partie”
-- ✍️ Footer personnalisé : `© 2025 Frédéric SALERNO. Tous droits réservés.`
+✅ Choix de la taille de grille :  
+- 4×4 (Débutant)  
+- 9×9 (Classique)  
+- 16×16 (Expert)  
+- 25×25 (Maître)
+
+✅ Choix du niveau :  
+- Facile à Extrême (modifie le nombre de cases cachées)
+
+✅ Interface responsive, design été avec fond dégradé
+
+✅ Affichage dynamique :
+- **Cadre noir épais**
+- **Blocs moyens (2x2, 3x3...) en traits moyens**
+- **Cases fines en gris clair**
+
+✅ Impression professionnelle :
+- Boutons masqués à l’impression
+- Style conservé pour la grille ET la solution
+
+✅ Affichage symbolique :
+- Nombres > 9 affichés sous forme de lettres (10 → A, 11 → B, ..., 35 → Z)
+
+✅ Solveur évolué :
+- 🔁 Algorithme classique + optimisé (MRV, backtracking, pruning)
+- 🤖 Choix automatique de la méthode selon la taille
+- ⏱️ Résolution en **thread séparé avec timeout (600s)**
+- 🌐 Compatible avec **Render**, même pour les grandes grilles
 
 ---
 
-## 🚀 Démo en ligne (Render)
+## 🧪 Lancer en local
 
-> 🔗 https://sudoku-ete.onrender.com *(exemple)*
+### 🔧 Prérequis
 
----
+- Python 3.10+ recommandé
+- `pip install -r requirements.txt`
 
-## 📦 Installation locale
-
-### 1. Cloner ou dézipper ce projet
-
-```bash
-git clone https://github.com/votre-utilisateur/sudoku-ete.git
-cd sudoku-ete
-```
-
-### 2. Créer un environnement Python
-
-```bash
-python -m venv venv
-source venv/bin/activate        # Windows: venv\Scripts\activate
-```
-
-### 3. Installer les dépendances
-
-```bash
-pip install -r requirements.txt
-```
-
-### 4. Lancer le serveur local
+### ▶️ Lancer
 
 ```bash
 python run.py
 ```
 
-Puis ouvrir [http://localhost:5000](http://localhost:5000)
+Ouvre [http://127.0.0.1:5000](http://127.0.0.1:5000)
 
 ---
 
-## 🌐 Déploiement sur Render (gratuit)
-
-1. Créer un compte sur [https://render.com](https://render.com)
-2. Lier ton dépôt GitHub
-3. Cliquer sur **“New Web Service”**
-4. Saisir les infos suivantes :
-
-- **Start command**: `gunicorn run:app`
-- **Build command**: `pip install -r requirements.txt`
-
-5. Lancer le déploiement
-
----
-
-## 📁 Structure
+## ⚙️ Structure du projet
 
 ```
-sudoku_saas/
+.
 ├── app/
-│   ├── __init__.py
-│   ├── routes.py
-│   ├── sudoku.py
-│   └── templates/
-│       ├── index.html
-│       └── game.html
+│   ├── __init__.py       # App Flask
+│   ├── routes.py         # Routes principales
+│   ├── sudoku.py         # Générateur, solveur, vérification
+│   ├── templates/
+│   │   ├── index.html    # Page d’accueil
+│   │   └── game.html     # Grille de jeu
+├── run.py                # Lanceur local avec arrêt propre
 ├── requirements.txt
-├── run.py
-├── Procfile
-├── render.yaml
-└── README.md
+├── README.md
 ```
 
 ---
 
-## 📦 Dépendances
+## ☁️ Déploiement sur Render
 
-- Python 3.8+
-- Flask
-- Gunicorn
+1. Ajouter un `build` command :
+   ```
+   pip install -r requirements.txt
+   ```
 
----
+2. Start command :
+   ```
+   python run.py
+   ```
 
-## 👤 Auteur
+3. Ajouter un fichier `render.yaml` si besoin (optionnel)
 
-**Frédéric SALERNO**  
-© 2025 Tous droits réservés.
-
----
-
-## 🧠 À venir (TODO)
-
-- ⏱️ Ajouter un chrono ou des scores
-- 🧠 Générateur plus intelligent
-- 👤 Système de comptes & leaderboard
-- 📱 Version mobile ou PWA
+4. Définir la variable d’environnement :
+   ```
+   FLASK_ENV=production
+   ```
 
 ---
 
-## 🔒 Licence
+## 🛑 Arrêt propre
 
-Ce projet est publié sous licence **MIT** (à adapter si besoin).
+Appuyez sur `Ctrl+C` → les threads sont fermés proprement avec message.
+
+---
+
+## © Licence
+
+MIT –  
+© 2025 Frédéric SALERNO. Tous droits réservés.
