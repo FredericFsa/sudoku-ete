@@ -21,12 +21,18 @@ Choisissez la **taille de la grille** (4x4, 9x9, 16x16), la **difficulté**, jou
 
 ---
 
-## 🚀 Installation locale
+## 🚀 Démo en ligne (Render)
+
+> 🔗 https://sudoku-ete.onrender.com *(exemple)*
+
+---
+
+## 📦 Installation locale
 
 ### 1. Cloner ou dézipper ce projet
 
 ```bash
-git clone https://github.com/votre-repo/sudoku-ete.git
+git clone https://github.com/votre-utilisateur/sudoku-ete.git
 cd sudoku-ete
 ```
 
@@ -49,7 +55,21 @@ pip install -r requirements.txt
 python run.py
 ```
 
-Puis ouvrir [http://localhost:5000](http://localhost:5000) dans votre navigateur 🧠
+Puis ouvrir [http://localhost:5000](http://localhost:5000)
+
+---
+
+## 🌐 Déploiement sur Render (gratuit)
+
+1. Créer un compte sur [https://render.com](https://render.com)
+2. Lier ton dépôt GitHub
+3. Cliquer sur **“New Web Service”**
+4. Saisir les infos suivantes :
+
+- **Start command**: `gunicorn run:app`
+- **Build command**: `pip install -r requirements.txt`
+
+5. Lancer le déploiement
 
 ---
 
@@ -61,11 +81,13 @@ sudoku_saas/
 │   ├── __init__.py
 │   ├── routes.py
 │   ├── sudoku.py
-│   ├── templates/
-│   │   ├── index.html
-│   │   └── game.html
+│   └── templates/
+│       ├── index.html
+│       └── game.html
 ├── requirements.txt
 ├── run.py
+├── Procfile
+├── render.yaml
 └── README.md
 ```
 
@@ -75,6 +97,7 @@ sudoku_saas/
 
 - Python 3.8+
 - Flask
+- Gunicorn
 
 ---
 
@@ -85,15 +108,15 @@ sudoku_saas/
 
 ---
 
-## 🧠 Idées futures (TODO)
+## 🧠 À venir (TODO)
 
 - ⏱️ Ajouter un chrono ou des scores
-- 🌐 Déployer en ligne (Render, Railway, Vercel…)
-- 🧠 Générateur plus intelligent avec techniques avancées
+- 🧠 Générateur plus intelligent
 - 👤 Système de comptes & leaderboard
+- 📱 Version mobile ou PWA
 
 ---
 
 ## 🔒 Licence
 
-Ce projet est publié sous licence **MIT**, à personnaliser si nécessaire.
+Ce projet est publié sous licence **MIT** (à adapter si besoin).
