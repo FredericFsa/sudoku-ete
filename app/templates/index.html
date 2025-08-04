@@ -1,0 +1,69 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Sudoku Soleil ☀️</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(to bottom right, #fff9c4, #b2ebf2);
+            font-family: 'Segoe UI', sans-serif;
+            padding: 50px;
+            text-align: center;
+        }
+        h1 {
+            font-size: 3rem;
+            color: #ff9800;
+        }
+        label {
+            font-weight: bold;
+        }
+        select, button {
+            max-width: 300px;
+            margin: 10px auto;
+        }
+        footer {
+            margin-top: 60px;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+    <h1>☀️ Sudoku d'Été</h1>
+    <p class="lead">Choisissez la taille et la difficulté de votre grille</p>
+    <form method="post" action="/play">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-md-4">
+                    <label for="size">Taille de la grille :</label>
+                    <select name="size" id="size" class="form-select" required onchange="toggleDifficulty(this.value)">
+                        <option value="4">4 x 4 (Débutant)</option>
+                        <option value="9" selected>9 x 9 (Classique)</option>
+                        <option value="16">16 x 16 (Expert)</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label for="difficulty">Difficulté :</label>
+                    <select name="difficulty" id="difficulty" class="form-select" required>
+                        <option value="easy">Facile</option>
+                        <option value="medium" selected>Moyen</option>
+                        <option value="hard">Difficile</option>
+                        <option value="expert">Expert</option>
+                        <option value="extreme">Très compliqué</option>
+                    </select>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-warning mt-4 px-5 py-2">🎮 Jouer</button>
+        </div>
+    </form>
+    <footer>© 2025 Frédéric SALERNO. Tous droits réservés.</footer>
+
+    <script>
+        function toggleDifficulty(size) {
+            const diffSelect = document.getElementById('difficulty');
+            diffSelect.disabled = parseInt(size) < 9;
+        }
+    </script>
+</body>
+</html>

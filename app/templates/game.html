@@ -1,0 +1,185 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Sudoku - {{ difficulty }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(to right, #fffde7, #e0f7fa);
+            font-family: 'Segoe UI', sans-serif;
+        }
+        table {
+            margin: auto;
+            border-collapse: collapse;
+        }
+        td {
+            width: 40px; height: 40px;
+            text-align: center;
+            vertical-align: middle;
+            border: 1px solid #ccc;
+            font-size: 18px;
+            background-color: #fff;
+        }
+        input {
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            border: none;
+            font-size: 18px;
+            background-color: #e0f7fa;
+        }
+        input:focus {
+            outline: none;
+            background-color: #b2ebf2;
+        }
+        .fixed {
+            font-weight: bold;
+            color: #0277bd;
+        }
+        @media print {
+            .no-print { display: none; }
+        }
+    </style>
+</head>
+<body class="p-4 text-center">
+    <h2 class="mb-4">🧩 Sudoku - Niveau {{ difficulty|capitalize }}</h2>
+    <div class="table-responsive">
+        <table>
+            {% for row in grid %}
+            <tr>
+                {% for val in row %}
+                <td>
+                    {% if val == 0 %}
+                        <input type="text" maxlength="1" pattern="[1-9]">
+                    {% else %}
+                        <span class="fixed">{{ val }}</span>
+                    {% endif %}
+                </td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+
+    <div class="no-print mt-4 d-flex justify-content-center flex-wrap gap-2">
+        <button onclick="checkSolution()" class="btn btn-success">✅ Vérifier la grille</button>
+        <button onclick="checkIfComplete()" class="btn btn-warning">🔍 Est-elle complète ?</button>
+        <button onclick="showSolution()" class="btn btn-info">🧠 Afficher la solution</button>
+        <button onclick="clearGrid()" class="btn btn-secondary">🧹 Effacer la grille</button>
+        <button onclick="window.print()" class="btn btn-dark">🖨️ Imprimer la grille</button>
+        <button onclick="printSolution()" class="btn btn-primary">🖨️ Imprimer la solution</button>
+        <a href="/" class="btn btn-danger">🔄 Nouvelle partie</a>
+    </div>
+
+    <footer class="mt-5 text-muted">© 2025 Frédéric SALERNO. Tous droits réservés.</footer>
+
+    <script>
+        async function checkSolution() {
+            const grid = extractGrid();
+            const response = await fetch('/check', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({grid})
+            });
+            const result = await response.json();
+            alert(result.correct ? "✅ La grille est correcte !" : "❌ La grille contient des erreurs !");
+        }
+
+        function checkIfComplete() {
+            const grid = extractGrid();
+            for (const row of grid) {
+                for (const val of row) {
+                    if (val === 0) {
+                        alert("⚠️ Il manque encore des chiffres !");
+                        return;
+                    }
+                }
+            }
+            alert("✅ La grille est entièrement remplie !");
+        }
+
+        async function showSolution() {
+            const response = await fetch('/solution');
+            const result = await response.json();
+            const solved = result.solution;
+            const rows = document.querySelectorAll("table tr");
+            for (let r = 0; r < rows.length; r++) {
+                const cells = rows[r].querySelectorAll("td");
+                for (let c = 0; c < cells.length; c++) {
+                    const input = cells[c].querySelector("input");
+                    if (input) input.value = solved[r][c];
+                }
+            }
+        }
+
+        function clearGrid() {
+            document.querySelectorAll("input").forEach(el => el.value = "");
+        }
+
+        function extractGrid() {
+            const rows = document.querySelectorAll("table tr");
+            const grid = [];
+            for (let r = 0; r < rows.length; r++) {
+                const cells = rows[r].querySelectorAll("td");
+                const row = [];
+                for (let c = 0; c < cells.length; c++) {
+                    const input = cells[c].querySelector("input");
+                    if (input) {
+                        const val = parseInt(input.value);
+                        row.push(isNaN(val) ? 0 : val);
+                    } else {
+                        row.push(parseInt(cells[c].textContent));
+                    }
+                }
+                grid.push(row);
+            }
+            return grid;
+        }
+
+        async function printSolution() {
+            const response = await fetch('/solution');
+            const result = await response.json();
+            const solved = result.solution;
+
+            const iframe = document.createElement("iframe");
+            iframe.style.display = "none";
+            document.body.appendChild(iframe);
+
+            const doc = iframe.contentDocument || iframe.contentWindow.document;
+            doc.open();
+            doc.write(`
+                <html>
+                <head>
+                    <title>Impression de la solution</title>
+                    <style>
+                        body { font-family: sans-serif; text-align: center; padding: 30px; }
+                        table { border-collapse: collapse; margin: auto; }
+                        td {
+                            width: 40px; height: 40px;
+                            border: 1px solid #999;
+                            text-align: center;
+                            font-size: 18px;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <h2>🧠 Solution du Sudoku</h2>
+                    <table>
+                        ${solved.map(row => `<tr>${row.map(cell => `<td>${cell}</td>`).join('')}</tr>`).join('')}
+                    </table>
+                    <script>
+                        window.onload = function() {
+                            window.print();
+                        };
+                    <\/script>
+                </body>
+                </html>
+            `);
+            doc.close();
+            setTimeout(() => document.body.removeChild(iframe), 2000);
+        }
+    </script>
+</body>
+</html>
