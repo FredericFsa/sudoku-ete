@@ -4,6 +4,6 @@ services:
     env: python
     plan: free
     buildCommand: ""
-    startCommand: python run.py
+    startCommand: gunicorn run:app
     autoDeploy: true
     branch: main
