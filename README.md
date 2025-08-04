@@ -1,4 +1,6 @@
 # 🧩 Sudoku SaaS - Par Frédéric Salerno
+[![Voir sur GitHub](https://img.shields.io/badge/GitHub-Sudoku--Été-181717?style=for-the-badge&logo=github)](https://github.com/FredericFsa/sudoku-ete)
+
 
 Sudoku SaaS est une application web responsive permettant de jouer au Sudoku avec différentes tailles de grille (4x4, 9x9, 16x16, 25x25) et niveaux de difficulté. Elle est optimisée pour **mobile et desktop** avec un rendu HTML/CSS dynamique et des interactions en JavaScript.
 
