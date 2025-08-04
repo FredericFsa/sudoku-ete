@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: sudoku-ete
+    env: python
+    plan: free
+    buildCommand: ""
+    startCommand: python run.py
+    autoDeploy: true
+    branch: main
