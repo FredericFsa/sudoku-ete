@@ -1,0 +1,282 @@
+<!-- game_mobile.html -->
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Sudoku - {{ difficulty }}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      background: linear-gradient(to right, #fffde7, #e0f7fa);
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    .sudoku-grid {
+      display: grid;
+      grid-template-columns: repeat({{ grid[0]|length }}, 1fr);
+      max-width: 90vmin;
+      aspect-ratio: 1 / 1;
+      margin: auto;
+      border: 4px solid #000;
+      gap: 1px;
+      background: #000;
+    }
+
+    .sudoku-cell {
+      background: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+      aspect-ratio: 1 / 1;
+    }
+
+    .sudoku-cell input {
+      width: 100%;
+      height: 100%;
+      text-align: center;
+      border: none;
+      font-size: 1.5em;
+      background-color: #e0f7fa;
+    }
+
+    .sudoku-cell input:focus {
+      outline: none;
+      background-color: #b2ebf2;
+    }
+
+    .fixed {
+      font-weight: bold;
+      font-size: 1.5em;
+      color: #0277bd;
+    }
+
+    .top-block    { border-top:    2px solid #000; }
+    .left-block   { border-left:   2px solid #000; }
+    .bottom-block { border-bottom: 2px solid #000; }
+    .right-block  { border-right:  2px solid #000; }
+
+    #loading {
+      font-weight: bold;
+      color: #0277bd;
+      margin-top: 1rem;
+      display: none;
+    }
+
+    .btn-lg {
+      font-size: 1.5rem;
+      padding: 1.2rem 1.5rem;
+    }
+
+    @media print {
+      .no-print, .no-print * {
+        display: none !important;
+      }
+    }
+  </style>
+</head>
+<body class="p-4 text-center">
+  <h2 class="mb-4">🧹 Sudoku - Niveau {{ difficulty|capitalize }}</h2>
+
+  <div class="sudoku-grid">
+    {% set size = grid|length %}
+    {% set block_size = (size ** 0.5)|round|int %}
+    {% for r in range(size) %}
+      {% for c in range(size) %}
+        {% set val = grid[r][c] %}
+        <div class="sudoku-cell
+          {% if r % block_size == 0 %}top-block{% endif %}
+          {% if c % block_size == 0 %}left-block{% endif %}
+          {% if r == size - 1 %}bottom-block{% endif %}
+          {% if c == size - 1 %}right-block{% endif %}">
+          {% if val == 0 %}
+            <input type="text" maxlength="1" pattern="[0-9A-Za-z]">
+          {% else %}
+            <span class="fixed">{{ to_symbol(val) }}</span>
+          {% endif %}
+        </div>
+      {% endfor %}
+    {% endfor %}
+  </div>
+
+  <div id="loading">⏳ Calcul de la solution en cours...</div>
+
+  <div class="no-print mt-4 d-flex justify-content-center flex-wrap gap-3">
+    <button onclick="checkSolution()" class="btn btn-success btn-lg">✅ Vérifier</button>
+    <button onclick="checkIfComplete()" class="btn btn-warning btn-lg">🔍 Complète ?</button>
+    <button onclick="showSolution()" class="btn btn-info btn-lg">🧠 Solution</button>
+    <button onclick="clearGrid()" class="btn btn-secondary btn-lg">🧹 Effacer</button>
+    <a href="/" class="btn btn-danger btn-lg">🔄 Recommencer</a>
+  </div>
+
+  <footer class="mt-5 text-muted">© 2025 Frédéric SALERNO. Tous droits réservés.</footer>
+<script>
+  function toSymbol(n) {
+    return n <= 9 ? n.toString() : String.fromCharCode(55 + n);
+  }
+
+  function extractGrid() {
+    const cells = document.querySelectorAll(".sudoku-cell");
+    const size = Math.sqrt(cells.length);
+    const grid = [];
+
+    for (let r = 0; r < size; r++) {
+      const row = [];
+      for (let c = 0; c < size; c++) {
+        const cell = cells[r * size + c];
+        const input = cell.querySelector("input");
+        let val = 0;
+        if (input && input.value.trim()) {
+          const raw = input.value.trim().toUpperCase();
+          val = /[A-Z]/.test(raw) ? raw.charCodeAt(0) - 55 : parseInt(raw);
+        } else if (!input) {
+          const raw = cell.textContent.trim().toUpperCase();
+          val = /[A-Z]/.test(raw) ? raw.charCodeAt(0) - 55 : parseInt(raw);
+        }
+        row.push(isNaN(val) ? 0 : val);
+      }
+      grid.push(row);
+    }
+
+    return grid;
+  }
+
+  async function checkSolution() {
+    const grid = extractGrid();
+    const response = await fetch('/check', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({grid})
+    });
+    const result = await response.json();
+    alert(result.correct ? "✅ La grille est correcte !" : "❌ La grille contient des erreurs !");
+  }
+
+  function checkIfComplete() {
+    const grid = extractGrid();
+    for (const row of grid) {
+      if (row.includes(0)) {
+        alert("⚠️ Il manque encore des cases !");
+        return;
+      }
+    }
+    alert("✅ La grille est entièrement remplie !");
+  }
+
+  async function showSolution() {
+    const loading = document.getElementById("loading");
+    loading.style.display = "block";
+
+    try {
+      const response = await fetch('/solution');
+      const result = await response.json();
+      const solved = result.solution;
+
+      const cells = document.querySelectorAll(".sudoku-cell");
+      let i = 0;
+      for (let r = 0; r < solved.length; r++) {
+        for (let c = 0; c < solved.length; c++) {
+          const input = cells[i].querySelector("input");
+          if (input) input.value = toSymbol(solved[r][c]);
+          i++;
+        }
+      }
+    } catch (e) {
+      alert("Erreur lors de la récupération de la solution !");
+    } finally {
+      loading.style.display = "none";
+    }
+  }
+
+  function clearGrid() {
+    document.querySelectorAll(".sudoku-cell input").forEach(el => el.value = "");
+  }
+
+  async function printSolution() {
+    const response = await fetch('/solution');
+    const result = await response.json();
+    const solved = result.solution;
+
+    const iframe = document.createElement("iframe");
+    iframe.style.display = "none";
+    document.body.appendChild(iframe);
+
+    const doc = iframe.contentDocument || iframe.contentWindow.document;
+    doc.open();
+    doc.write(`
+      <html>
+      <head>
+        <title>Impression de la solution</title>
+        <style>
+          body {
+            font-family: 'Segoe UI', sans-serif;
+            text-align: center;
+            padding: 30px;
+          }
+          .sudoku-wrapper {
+            display: inline-block;
+            border: 4px solid #000;
+            padding: 2px;
+          }
+          table {
+            border-collapse: collapse;
+            margin: auto;
+          }
+          td {
+            width: 40px;
+            height: 40px;
+            text-align: center;
+            vertical-align: middle;
+            border: 1px solid #ccc;
+            font-size: 18px;
+            background-color: #fff;
+          }
+          .top-block    { border-top:    2px solid #000 !important; }
+          .left-block   { border-left:   2px solid #000 !important; }
+          .bottom-block { border-bottom: 2px solid #000 !important; }
+          .right-block  { border-right:  2px solid #000 !important; }
+          footer {
+            margin-top: 40px;
+            color: #888;
+            font-size: 14px;
+          }
+        </style>
+      </head>
+      <body>
+        <h2>🧠 Solution du Sudoku</h2>
+        <div class="sudoku-wrapper">
+          <table>
+            ${solved.map((row, r) => `
+              <tr>
+                ${row.map((val, c) => {
+                  const size = solved.length;
+                  const blockSize = Math.sqrt(size);
+                  const classes = [
+                    (r % blockSize === 0 ? 'top-block' : ''),
+                    (c % blockSize === 0 ? 'left-block' : ''),
+                    (r === size - 1 ? 'bottom-block' : ''),
+                    (c === size - 1 ? 'right-block' : '')
+                  ].join(' ');
+                  const symbol = val <= 9 ? val.toString() : String.fromCharCode(55 + val);
+                  return `<td class="${classes}">${symbol}</td>`;
+                }).join('')}
+              </tr>
+            `).join('')}
+          </table>
+        </div>
+        <footer>© 2025 Frédéric SALERNO. Tous droits réservés.</footer>
+        <script>
+          window.onload = function() {
+            window.print();
+          };
+        <\/script>
+      </body>
+      </html>
+    `);
+    doc.close();
+    setTimeout(() => document.body.removeChild(iframe), 2000);
+  }
+</script>
+</body>
+</html>

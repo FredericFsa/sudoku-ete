@@ -13,6 +13,7 @@ atexit.register(shutdown_executor)
 if __name__ == "__main__":
     try:
         print("🚀 Lancement du serveur Flask sur http://127.0.0.1:5000")
-        app.run(debug=True, use_reloader=False, threaded=True)
+        # app.run(debug=True, use_reloader=False, threaded=True)
+        app.run(host="0.0.0.0", port=5000, debug=True, use_reloader=False, threaded=True)
     except KeyboardInterrupt:
         print("\n🛑 Arrêt manuel détecté (Ctrl+C)")

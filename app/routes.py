@@ -13,21 +13,31 @@ executor = ThreadPoolExecutor(max_workers=2)
 
 @app.route("/")
 def index():
-    return render_template("index.html")
+    user_agent = request.headers.get("User-Agent", "").lower()
+    is_mobile = any(device in user_agent for device in ["iphone", "android", "ipad", "mobile"])
+    template = "index_mobile.html" if is_mobile else "index_desktop.html"
+    return render_template(template)
 
-@app.route("/play", methods=["POST"])
-def play():
+@app.route("/start", methods=["POST"])
+def start_game():
     difficulty = request.form.get("difficulty", "easy")
     try:
         size = int(request.form.get("size", 9))
     except ValueError:
         size = 9
+
     if size not in [4, 9, 16, 25]:
         size = 9  # Sécurité
 
     grid = generate_sudoku(difficulty, size)
     session["original_grid"] = copy.deepcopy(grid)
-    return render_template("game.html", grid=grid, difficulty=difficulty, to_symbol=to_symbol)
+
+    user_agent = request.headers.get("User-Agent", "").lower()
+    is_mobile = any(device in user_agent for device in ["iphone", "android", "ipad", "mobile"])
+    template = "game_mobile.html" if is_mobile else "game_desktop.html"
+
+    return render_template(template, grid=grid, difficulty=difficulty, to_symbol=to_symbol)
+
 
 @app.route("/check", methods=["POST"])
 def check():
@@ -66,3 +76,4 @@ def solution():
 def shutdown_executor():
     print("⏹️ Fermeture propre des threads...")
     executor.shutdown(wait=False)
+    

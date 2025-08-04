@@ -1,106 +1,84 @@
-# ☀️ Sudoku SaaS – Été 2025
+# 🧩 Sudoku SaaS - Par Frédéric Salerno
 
-Une application web en Python/Flask pour jouer au Sudoku sur toutes les tailles de grille :  
-**4x4**, **9x9**, **16x16**, jusqu'à **25x25**, avec des fonctionnalités modernes, propres et imprimables !
+Sudoku SaaS est une application web responsive permettant de jouer au Sudoku avec différentes tailles de grille (4x4, 9x9, 16x16, 25x25) et niveaux de difficulté. Elle est optimisée pour **mobile et desktop** avec un rendu HTML/CSS dynamique et des interactions en JavaScript.
 
----
+🔗 **Application en ligne** : [https://sudoku-ete.onrender.com](https://sudoku-ete.onrender.com)
 
-## 🚀 Fonctionnalités
+## 🚀 Fonctionnalités principales
 
-✅ Choix de la taille de grille :  
-- 4×4 (Débutant)  
-- 9×9 (Classique)  
-- 16×16 (Expert)  
-- 25×25 (Maître)
+- ✅ Génération aléatoire de grilles Sudoku
+- 🧠 Vérification de la solution
+- 🔍 Détection si la grille est remplie
+- 🖨️ Impression de la grille ou de la solution
+- 🔄 Nouvelle partie rapide
+- 🎯 Adaptation automatique à l'appareil (mobile ou desktop)
 
-✅ Choix du niveau :  
-- Facile à Extrême (modifie le nombre de cases cachées)
+## 🛠️ Technologies utilisées
 
-✅ Interface responsive, design été avec fond dégradé
+- Python 3 + Flask
+- HTML5 + CSS3 (avec Bootstrap 5)
+- JavaScript (DOM manipulation, fetch API)
+- Jinja2 (template Flask)
+- ThreadPoolExecutor (pour le solveur)
 
-✅ Affichage dynamique :
-- **Cadre noir épais**
-- **Blocs moyens (2x2, 3x3...) en traits moyens**
-- **Cases fines en gris clair**
+## 📁 Structure du projet
 
-✅ Impression professionnelle :
-- Boutons masqués à l’impression
-- Style conservé pour la grille ET la solution
+```
+sudoku_saas/
+├── app/
+│   ├── __init__.py
+│   ├── routes.py          # Logique de routing Flask
+│   ├── sudoku.py          # Génération, vérification et résolution des grilles
+│   └── templates/
+│       ├── index_mobile.html
+│       ├── index_desktop.html
+│       ├── game_mobile.html
+│       └── game_desktop.html
+├── static/                # favicon, style perso, etc.
+├── run.py                 # Lancement du serveur Flask
+├── requirements.txt       # Dépendances Python
+└── README.md              # Ce fichier
+```
 
-✅ Affichage symbolique :
-- Nombres > 9 affichés sous forme de lettres (10 → A, 11 → B, ..., 35 → Z)
+## ⚙️ Installation locale
 
-✅ Solveur évolué :
-- 🔁 Algorithme classique + optimisé (MRV, backtracking, pruning)
-- 🤖 Choix automatique de la méthode selon la taille
-- ⏱️ Résolution en **thread séparé avec timeout (600s)**
-- 🌐 Compatible avec **Render**, même pour les grandes grilles
+1. Cloner ce dépôt :
 
----
+```bash
+git clone https://github.com/votre-repo/sudoku_saas.git
+cd sudoku_saas
+```
 
-## 🧪 Lancer en local
+2. Créer un environnement virtuel :
 
-### 🔧 Prérequis
+```bash
+python -m venv venv
+source venv/bin/activate   # Linux/macOS
+venv\Scripts\activate    # Windows
+```
 
-- Python 3.10+ recommandé
-- `pip install -r requirements.txt`
+3. Installer les dépendances :
 
-### ▶️ Lancer
+```bash
+pip install -r requirements.txt
+```
+
+4. Lancer l'application :
 
 ```bash
 python run.py
 ```
 
-Ouvre [http://127.0.0.1:5000](http://127.0.0.1:5000)
+Accéder à l'application sur : [http://127.0.0.1:5000](http://127.0.0.1:5000)
 
----
+## 🌐 Déploiement
 
-## ⚙️ Structure du projet
+Cette application est hébergée sur **Render** :  
+🔗 [https://sudoku-ete.onrender.com](https://sudoku-ete.onrender.com)
 
-```
-.
-├── app/
-│   ├── __init__.py       # App Flask
-│   ├── routes.py         # Routes principales
-│   ├── sudoku.py         # Générateur, solveur, vérification
-│   ├── templates/
-│   │   ├── index.html    # Page d’accueil
-│   │   └── game.html     # Grille de jeu
-├── run.py                # Lanceur local avec arrêt propre
-├── requirements.txt
-├── README.md
-```
+> 💡 Tu peux aussi la déployer sur : Heroku, Railway, Docker, ou via Nginx + Gunicorn.
 
----
+## 📌 Auteur
 
-## ☁️ Déploiement sur Render
-
-1. Ajouter un `build` command :
-   ```
-   pip install -r requirements.txt
-   ```
-
-2. Start command :
-   ```
-   python run.py
-   ```
-
-3. Ajouter un fichier `render.yaml` si besoin (optionnel)
-
-4. Définir la variable d’environnement :
-   ```
-   FLASK_ENV=production
-   ```
-
----
-
-## 🛑 Arrêt propre
-
-Appuyez sur `Ctrl+C` → les threads sont fermés proprement avec message.
-
----
-
-## © Licence
-
-MIT –  
-© 2025 Frédéric SALERNO. Tous droits réservés.
+© 2025 [Frédéric SALERNO](mailto:fred.salerno.dev@gmail.com)  
+Tous droits réservés.

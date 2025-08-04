@@ -1,0 +1,73 @@
+<!-- index_mobile.html -->
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Sudoku Mobile ☀️</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      background: linear-gradient(to bottom, #fff9c4, #b2ebf2);
+      font-family: 'Segoe UI', sans-serif;
+      padding: 20px;
+      text-align: center;
+    }
+    h1 {
+      font-size: 2.5rem;
+      color: #ff9800;
+    }
+    select.form-select {
+      font-size: 1.4rem;
+      padding: 0.75rem;
+    }
+    label {
+      font-size: 1.2rem;
+    }
+    .btn-lg {
+      font-size: 1.5rem;
+      padding: 1.2rem 1.5rem;
+    }
+    footer {
+      margin-top: 40px;
+      font-size: 1rem;
+      color: #777;
+    }
+  </style>
+</head>
+<body>
+  <h1>☀️ Sudoku Mobile</h1>
+  <p>Choisissez la taille et la difficulté</p>
+  <form method="POST" action="/start">
+    <div class="mb-4">
+      <label for="size">Taille :</label>
+      <select name="size" id="size" class="form-select" onchange="toggleDifficulty(this.value)">
+        <option value="4">4x4</option>
+        <option value="9" selected>9x9</option>
+        <option value="16">16x16</option>
+        <option value="25">25x25</option>
+      </select>
+    </div>
+    <div class="mb-4">
+      <label for="difficulty">Difficulté :</label>
+      <select name="difficulty" id="difficulty" class="form-select">
+        <option value="easy">Facile</option>
+        <option value="medium" selected>Moyen</option>
+        <option value="hard">Difficile</option>
+        <option value="expert">Expert</option>
+        <option value="extreme">Extrême</option>
+      </select>
+    </div>
+    <button type="submit" class="btn btn-warning btn-lg w-100">🎮 Jouer</button>
+  </form>
+
+  <footer>© 2025 Frédéric SALERNO</footer>
+
+  <script>
+    function toggleDifficulty(size) {
+      const diff = document.getElementById('difficulty');
+      diff.disabled = parseInt(size) < 9;
+    }
+  </script>
+</body>
+</html>
