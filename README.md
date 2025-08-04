@@ -1,5 +1,7 @@
 
 # ☀️ Sudoku d'Été - Web App (Flask)
+[![Site en ligne](https://img.shields.io/badge/🟢%20Sudoku%20en%20ligne-Render.com-brightgreen?style=flat&logo=flask)](https://sudoku-ete.onrender.com)
+
 
 Un jeu **Sudoku en ligne**, conçu avec ❤️ pour jouer n'importe où — y compris sur la plage 🏖️.  
 Choisissez la **taille de la grille** (4x4, 9x9, 16x16), la **difficulté**, jouez dans votre navigateur, imprimez, vérifiez, recommencez !
