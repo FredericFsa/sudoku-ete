@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -33,6 +32,9 @@
         footer {
             margin-top: auto;
             color: #888;
+        }
+        .disabled-option {
+            color: #ccc !important;
         }
     </style>
 </head>
@@ -74,7 +76,62 @@
     <script>
         function toggleDifficulty(size) {
             const diffSelect = document.getElementById('difficulty');
-            diffSelect.disabled = parseInt(size) < 9;
+            const sizeInt = parseInt(size);
+            
+            if (sizeInt < 9) {
+                // Pour 4x4 : désactiver toutes les difficultés sauf facile
+                diffSelect.disabled = true;
+                diffSelect.value = 'easy';
+            } else if (sizeInt === 25) {
+                // ✅ Pour 25x25 : seulement Facile et Moyen
+                diffSelect.disabled = false;
+                
+                const options = diffSelect.querySelectorAll('option');
+                options.forEach(option => {
+                    if (['hard', 'expert', 'extreme'].includes(option.value)) {
+                        option.disabled = true;
+                        option.style.color = '#ccc';
+                        option.textContent = option.textContent.replace(' (Non disponible)', '') + ' (Non disponible)';
+                    } else {
+                        option.disabled = false;
+                        option.style.color = '';
+                        option.textContent = option.textContent.replace(' (Non disponible)', '');
+                    }
+                });
+                
+                if (['hard', 'expert', 'extreme'].includes(diffSelect.value)) {
+                    diffSelect.value = 'medium';
+                }
+            } else if (sizeInt === 16) {
+                // ✅ Pour 16x16 : Facile, Moyen, Difficile seulement
+                diffSelect.disabled = false;
+                
+                const options = diffSelect.querySelectorAll('option');
+                options.forEach(option => {
+                    if (['expert', 'extreme'].includes(option.value)) {
+                        option.disabled = true;
+                        option.style.color = '#ccc';
+                        option.textContent = option.textContent.replace(' (Non disponible)', '') + ' (Non disponible)';
+                    } else {
+                        option.disabled = false;
+                        option.style.color = '';
+                        option.textContent = option.textContent.replace(' (Non disponible)', '');
+                    }
+                });
+                
+                if (['expert', 'extreme'].includes(diffSelect.value)) {
+                    diffSelect.value = 'hard';
+                }
+            } else {
+                // Pour 9x9 : toutes les difficultés disponibles
+                diffSelect.disabled = false;
+                const options = diffSelect.querySelectorAll('option');
+                options.forEach(option => {
+                    option.disabled = false;
+                    option.style.color = '';
+                    option.textContent = option.textContent.replace(' (Non disponible)', '');
+                });
+            }
         }
     </script>
 </body>

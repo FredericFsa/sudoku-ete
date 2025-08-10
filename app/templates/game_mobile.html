@@ -1,4 +1,3 @@
-<!-- game_mobile.html -->
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -7,6 +6,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
+    {% set size = grid|length %}
+    
     body {
       background: linear-gradient(to right, #fffde7, #e0f7fa);
       font-family: 'Segoe UI', sans-serif;
@@ -14,15 +15,150 @@
 
     .sudoku-grid {
       display: grid;
-      grid-template-columns: repeat({{ grid[0]|length }}, 1fr);
-      max-width: 90vmin;
+      grid-template-columns: repeat({{ size }}, 1fr);
+      max-width: 95vw;
       aspect-ratio: 1 / 1;
       margin: auto;
       border: 4px solid #000;
       gap: 1px;
       background: #000;
+      {% if size >= 25 %}
+      /* 25x25 : Conteneur scrollable pour mobile */
+      max-width: 100vw;
+      width: 100vw;
+      height: 100vw;
+      overflow: auto;
+      {% elif size >= 16 %}
+      max-width: 98vw;
+      {% endif %}
     }
 
+    {% if size >= 25 %}
+    /* 25x25 Mobile : PLEIN ÉCRAN avec zoom/scroll */
+    body {
+      padding: 0 !important;
+      margin: 0 !important;
+      overflow: hidden;
+    }
+
+    h2 {
+      font-size: 1.2rem !important;
+      margin: 5px 0 !important;
+      padding: 5px;
+      background: rgba(255,255,255,0.9);
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+    }
+
+    .sudoku-cell {
+      background: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+      min-width: 25px;
+      min-height: 25px;
+      font-size: 12px;
+      border: 0.5px solid #999;
+    }
+
+    .sudoku-cell input {
+      width: 100%;
+      height: 100%;
+      text-align: center;
+      border: none;
+      font-size: 12px;
+      background-color: #e0f7fa;
+      padding: 0;
+    }
+
+    .fixed {
+      font-weight: bold;
+      font-size: 12px;
+      color: #0277bd;
+    }
+
+    /* Container PLEIN ÉCRAN scrollable */
+    .sudoku-container {
+      position: fixed;
+      top: 60px;
+      left: 0;
+      right: 0;
+      bottom: 120px;
+      overflow: auto;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #f8f8f8;
+      padding: 10px;
+    }
+
+    .sudoku-grid {
+      min-width: 650px;
+      min-height: 650px;
+      width: 650px;
+      height: 650px;
+      border: 3px solid #000;
+      gap: 0.5px;
+    }
+
+    /* Boutons en bas de page fixes */
+    .button-container {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: white;
+      padding: 10px;
+      border-top: 2px solid #ddd;
+      z-index: 100;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn-mobile {
+      font-size: 0.9rem !important;
+      padding: 8px 12px !important;
+      flex: 1;
+      min-width: 80px;
+      max-width: 120px;
+    }
+
+    {% elif size >= 16 %}
+    /* 16x16 Mobile : Cellules moyennes */
+    .sudoku-cell {
+      background: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+      min-width: 20px;
+      min-height: 20px;
+      font-size: 12px;
+    }
+
+    .sudoku-cell input {
+      width: 100%;
+      height: 100%;
+      text-align: center;
+      border: none;
+      font-size: 12px;
+      background-color: #e0f7fa;
+    }
+
+    .fixed {
+      font-weight: bold;
+      font-size: 12px;
+      color: #0277bd;
+    }
+
+    {% else %}
+    /* 4x4 et 9x9 Mobile : Cellules standards */
     .sudoku-cell {
       background: #fff;
       display: flex;
@@ -41,15 +177,16 @@
       background-color: #e0f7fa;
     }
 
-    .sudoku-cell input:focus {
-      outline: none;
-      background-color: #b2ebf2;
-    }
-
     .fixed {
       font-weight: bold;
       font-size: 1.5em;
       color: #0277bd;
+    }
+    {% endif %}
+
+    .sudoku-cell input:focus {
+      outline: none;
+      background-color: #b2ebf2;
     }
 
     .top-block    { border-top:    2px solid #000; }
@@ -65,8 +202,13 @@
     }
 
     .btn-lg {
+      {% if size >= 25 %}
+      /* Pas de btn-lg pour 25x25, on utilise btn-mobile */
+      display: none;
+      {% else %}
       font-size: 1.5rem;
       padding: 1.2rem 1.5rem;
+      {% endif %}
     }
 
     @media print {
@@ -77,10 +219,47 @@
   </style>
 </head>
 <body class="p-4 text-center">
-  <h2 class="mb-4">🧹 Sudoku - Niveau {{ difficulty|capitalize }}</h2>
+  <h2 class="mb-4">🧩 Sudoku - Niveau {{ difficulty|capitalize }}</h2>
 
+  {% if size >= 25 %}
+  <!-- Interface PLEIN ÉCRAN pour 25x25 -->
+  <h2>🧩 Sudoku 25x25 - {{ difficulty|capitalize }}</h2>
+  
+  <div class="sudoku-container">
+    <div class="sudoku-grid">
+      {% set block_size = (size ** 0.5)|round|int %}
+      {% for r in range(size) %}
+        {% for c in range(size) %}
+          {% set val = grid[r][c] %}
+          <div class="sudoku-cell
+            {% if r % block_size == 0 %}top-block{% endif %}
+            {% if c % block_size == 0 %}left-block{% endif %}
+            {% if r == size - 1 %}bottom-block{% endif %}
+            {% if c == size - 1 %}right-block{% endif %}">
+            {% if val == 0 %}
+              <input type="text" maxlength="1" pattern="[0-9A-Za-z]">
+            {% else %}
+              <span class="fixed">{{ to_symbol(val) }}</span>
+            {% endif %}
+          </div>
+        {% endfor %}
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Boutons fixes en bas -->
+  <div class="button-container">
+    <button onclick="checkSolution()" class="btn btn-success btn-mobile">✅ Vérif</button>
+    <button onclick="showSolution()" class="btn btn-info btn-mobile">🧠 Solution</button>
+    <button onclick="clearGrid()" class="btn btn-secondary btn-mobile">🧹 Effacer</button>
+    <a href="/" class="btn btn-danger btn-mobile">🔄 Nouveau</a>
+  </div>
+
+  {% else %}
+  <h2 class="mb-4">🧩 Sudoku - Niveau {{ difficulty|capitalize }}</h2>
+  
+  <!-- Grilles normales 4x4, 9x9, 16x16 -->
   <div class="sudoku-grid">
-    {% set size = grid|length %}
     {% set block_size = (size ** 0.5)|round|int %}
     {% for r in range(size) %}
       {% for c in range(size) %}
@@ -109,9 +288,12 @@
     <button onclick="clearGrid()" class="btn btn-secondary btn-lg">🧹 Effacer</button>
     <a href="/" class="btn btn-danger btn-lg">🔄 Recommencer</a>
   </div>
+  {% endif %}
 
   <footer class="mt-5 text-muted">© 2025 Frédéric SALERNO. Tous droits réservés.</footer>
 <script>
+  const GRID_SIZE = {{ size }};
+
   function toSymbol(n) {
     return n <= 9 ? n.toString() : String.fromCharCode(55 + n);
   }
@@ -191,91 +373,6 @@
 
   function clearGrid() {
     document.querySelectorAll(".sudoku-cell input").forEach(el => el.value = "");
-  }
-
-  async function printSolution() {
-    const response = await fetch('/solution');
-    const result = await response.json();
-    const solved = result.solution;
-
-    const iframe = document.createElement("iframe");
-    iframe.style.display = "none";
-    document.body.appendChild(iframe);
-
-    const doc = iframe.contentDocument || iframe.contentWindow.document;
-    doc.open();
-    doc.write(`
-      <html>
-      <head>
-        <title>Impression de la solution</title>
-        <style>
-          body {
-            font-family: 'Segoe UI', sans-serif;
-            text-align: center;
-            padding: 30px;
-          }
-          .sudoku-wrapper {
-            display: inline-block;
-            border: 4px solid #000;
-            padding: 2px;
-          }
-          table {
-            border-collapse: collapse;
-            margin: auto;
-          }
-          td {
-            width: 40px;
-            height: 40px;
-            text-align: center;
-            vertical-align: middle;
-            border: 1px solid #ccc;
-            font-size: 18px;
-            background-color: #fff;
-          }
-          .top-block    { border-top:    2px solid #000 !important; }
-          .left-block   { border-left:   2px solid #000 !important; }
-          .bottom-block { border-bottom: 2px solid #000 !important; }
-          .right-block  { border-right:  2px solid #000 !important; }
-          footer {
-            margin-top: 40px;
-            color: #888;
-            font-size: 14px;
-          }
-        </style>
-      </head>
-      <body>
-        <h2>🧠 Solution du Sudoku</h2>
-        <div class="sudoku-wrapper">
-          <table>
-            ${solved.map((row, r) => `
-              <tr>
-                ${row.map((val, c) => {
-                  const size = solved.length;
-                  const blockSize = Math.sqrt(size);
-                  const classes = [
-                    (r % blockSize === 0 ? 'top-block' : ''),
-                    (c % blockSize === 0 ? 'left-block' : ''),
-                    (r === size - 1 ? 'bottom-block' : ''),
-                    (c === size - 1 ? 'right-block' : '')
-                  ].join(' ');
-                  const symbol = val <= 9 ? val.toString() : String.fromCharCode(55 + val);
-                  return `<td class="${classes}">${symbol}</td>`;
-                }).join('')}
-              </tr>
-            `).join('')}
-          </table>
-        </div>
-        <footer>© 2025 Frédéric SALERNO. Tous droits réservés.</footer>
-        <script>
-          window.onload = function() {
-            window.print();
-          };
-        <\/script>
-      </body>
-      </html>
-    `);
-    doc.close();
-    setTimeout(() => document.body.removeChild(iframe), 2000);
   }
 </script>
 </body>

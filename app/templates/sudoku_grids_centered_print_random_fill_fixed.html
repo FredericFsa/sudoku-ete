@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sudoku — Impression</title>
+  <style>
+    :root{ --block:#000; --fg:#1e1e2a; }
+    *{ box-sizing:border-box }
+    html,body{ height:100% }
+    body{ margin:0; color:var(--fg); }
+
+    /* Conteneur unique de la page imprimée */
+    .canvas{ padding:0; margin:0; }
+
+    /* Header imprimable (haut de page) */
+    #print-header{
+      display:none;
+      align-items:baseline; justify-content:space-between; gap:16px;
+      padding:0 0 8mm 0; margin:0 0 8mm 0; border-bottom:1px solid #ddd;
+      font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+    }
+    #print-header h1{ margin:0; font-size:20px; font-weight:700 }
+    #print-header .ph-left{ display:flex; flex-direction:column; gap:4px }
+    #print-header #ph-sub{ color:#555; font-size:12px }
+    #print-header #ph-sub span::after{ content:" · " }
+    #print-header #ph-sub span:last-child::after{ content:"" }
+    #print-header .ph-right{ font-size:12px; color:#444 }
+
+    /* Zone centrale pour la grille */
+    .grid-wrap{ padding:0; margin:0 }
+
+    /* Footer imprimable (bas de page) */
+    #print-footer{
+      display:none; text-align:center; color:#444; font-size:12px; margin:8mm 0 0 0;
+      font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+    }
+
+    /* Grille */
+    table.sudoku{ border-collapse:collapse; background:#fff; margin:0 auto }
+    table.sudoku td{
+      width:24px; height:24px; text-align:center; vertical-align:middle;
+      border:1px solid #bbb; font-size:14px; line-height:1; user-select:none
+    }
+    .top-block{    border-top:2.5px solid var(--block)!important }
+    .left-block{   border-left:2.5px solid var(--block)!important }
+    .right-block{  border-right:2.5px solid var(--block)!important }
+    .bottom-block{ border-bottom:2.5px solid var(--block)!important }
+
+    /* Papier */
+    @page { size: A4 portrait; margin: 10mm; }
+
+    /* Impression : 1 page, header en haut, grille centrée, footer en bas */
+    @media print{
+      html, body{ height:auto !important }
+      body{ display:block !important; min-height:0 !important; margin:0 !important; background:#fff }
+
+      .canvas{
+        display:flex; flex-direction:column; justify-content:space-between;
+        min-height:100vh;
+        transform: scale(var(--print-scale, 0.988));
+        transform-origin: center center;
+        break-inside:avoid; page-break-inside:avoid;
+      }
+
+      #print-header{ display:flex !important; break-inside:avoid; page-break-inside:avoid; }
+      #print-footer{ display:block !important; break-inside:avoid; page-break-inside:avoid; }
+
+      .grid-wrap{
+        flex:1 1 auto; display:flex; align-items:center; justify-content:center;
+        break-inside:avoid; page-break-inside:avoid;
+      }
+
+      *, .canvas, .grid-wrap, table.sudoku{ break-inside:avoid; page-break-inside:avoid; }
+    }
+  </style>
+</head>
+<body>
+  <section class="canvas">
+    <div id="print-header">
+      <div class="ph-left">
+        <h1 id="ph-title">Sudoku</h1>
+        <div id="ph-sub">
+          <span id="ph-size">—</span>
+          <span id="ph-diff"></span>
+          <span id="ph-date"></span>
+        </div>
+      </div>
+      <div class="ph-right" id="ph-copy">Sudoku</div>
+    </div>
+
+    <div id="grid-container" class="grid-wrap" aria-live="polite"></div>
+
+    <div id="print-footer">© 2025 Frédéric SALERNO — Tous droits réservés</div>
+  </section>
+
+  <script>
+    // --- utils ---
+    function blockSizeFor(n){ return Math.round(Math.sqrt(n)); }
+    function toSymbol(v){
+      if(!v) return '';
+      if(v<=9) return String(v);
+      const map='ABCDEFGHIJKLMNOPQRSTUVWXYZ'; const i=v-10;
+      return map[i] ?? String(v);
+    }
+    function generateTableHTML(grid,n){
+      const B = blockSizeFor(n);
+      const rows = grid.map((row,r)=>{
+        const cells = row.map((val,c)=>{
+          const classes = [
+            (r % B === 0 ? 'top-block' : ''),
+            (c % B === 0 ? 'left-block' : ''),
+            (r === n-1 ? 'bottom-block' : ''),
+            (c === n-1 ? 'right-block' : '')
+          ].filter(Boolean).join(' ');
+          const content = val ? toSymbol(val) : '';
+          return '<td class="'+classes+'">'+content+'</td>';
+        }).join('');
+        return '<tr>'+cells+'</tr>';
+      }).join('');
+      return '<table class="sudoku" aria-label="Grille '+n+'×'+n+'"><tbody>'+rows+'</tbody></table>';
+    }
+
+    // --- prettyGrid API (compat) ---
+    (function(){
+      function fromBracketed(text){
+        const lines = text.trim().split(/\r?\n/).filter(Boolean);
+        const map = ch => {
+          if (ch==='0') return 0;
+          if (/[1-9]/.test(ch)) return +ch;
+          const up = ch.toUpperCase(); return /[A-Z]/.test(up) ? 10 + (up.charCodeAt(0)-65) : 0;
+        };
+        return lines.map(line => Array.from(line.replace(/\[|\]/g,'')).map(map));
+      }
+      function renderFromArray(grid){
+        const n = grid.length;
+        const html = generateTableHTML(grid, n);
+        const gridContainer = document.getElementById('grid-container');
+        gridContainer.innerHTML = html;
+      }
+      function setHeader(meta){
+        const title = meta?.title ?? 'Sudoku';
+        const size  = meta?.size  ?? '';
+        const diff  = meta?.difficulty ? 'Difficulté: '+meta.difficulty : '';
+        const date  = meta?.date  ?? new Date().toLocaleDateString('fr-BE');
+        const copy  = meta?.copyright ?? '© 2025';
+        const tEl = document.getElementById('ph-title');
+        const sEl = document.getElementById('ph-size');
+        const dEl = document.getElementById('ph-diff');
+        const dtEl= document.getElementById('ph-date');
+        const cEl = document.getElementById('ph-copy');
+        const fEl = document.getElementById('print-footer');
+        if (tEl) tEl.textContent = title;
+        if (sEl) sEl.textContent = size ? String(size) : '';
+        if (dEl) dEl.textContent = diff;
+        if (dtEl) dtEl.textContent = date;
+        if (cEl) cEl.textContent = copy;
+        if (fEl) fEl.textContent = copy + ' — Tous droits réservés';
+      }
+      window.prettyGrid = {
+        render(grid){ renderFromArray(grid); },
+        renderFromBracketed(text){ renderFromArray(fromBracketed(text)); },
+        setHeader,
+        print(){ window.print(); }
+      };
+    })();
+  </script>
+</body>
+</html>

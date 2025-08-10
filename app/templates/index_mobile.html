@@ -1,4 +1,3 @@
-<!-- index_mobile.html -->
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -46,6 +45,10 @@
     font-size: 1rem;
     color: #777;
   }
+  
+  .disabled-option {
+    color: #ccc !important;
+  }
 </style>
 
 </head>
@@ -84,7 +87,62 @@
   <script>
     function toggleDifficulty(size) {
       const diff = document.getElementById('difficulty');
-      diff.disabled = parseInt(size) < 9;
+      const sizeInt = parseInt(size);
+      
+      if (sizeInt < 9) {
+        // Pour 4x4 : désactiver
+        diff.disabled = true;
+        diff.value = 'easy';
+      } else if (sizeInt === 25) {
+        // ✅ Pour 25x25 : seulement Facile et Moyen
+        diff.disabled = false;
+        
+        const options = diff.querySelectorAll('option');
+        options.forEach(option => {
+          if (['hard', 'expert', 'extreme'].includes(option.value)) {
+            option.disabled = true;
+            option.style.color = '#ccc';
+            option.textContent = option.textContent.replace(' (Non disponible)', '') + ' (Non disponible)';
+          } else {
+            option.disabled = false;
+            option.style.color = '';
+            option.textContent = option.textContent.replace(' (Non disponible)', '');
+          }
+        });
+        
+        if (['hard', 'expert', 'extreme'].includes(diff.value)) {
+          diff.value = 'medium';
+        }
+      } else if (sizeInt === 16) {
+        // ✅ Pour 16x16 : Facile, Moyen, Difficile seulement
+        diff.disabled = false;
+        
+        const options = diff.querySelectorAll('option');
+        options.forEach(option => {
+          if (['expert', 'extreme'].includes(option.value)) {
+            option.disabled = true;
+            option.style.color = '#ccc';
+            option.textContent = option.textContent.replace(' (Non disponible)', '') + ' (Non disponible)';
+          } else {
+            option.disabled = false;
+            option.style.color = '';
+            option.textContent = option.textContent.replace(' (Non disponible)', '');
+          }
+        });
+        
+        if (['expert', 'extreme'].includes(diff.value)) {
+          diff.value = 'hard';
+        }
+      } else {
+        // Pour 9x9 : tout disponible
+        diff.disabled = false;
+        const options = diff.querySelectorAll('option');
+        options.forEach(option => {
+          option.disabled = false;
+          option.style.color = '';
+          option.textContent = option.textContent.replace(' (Non disponible)', '');
+        });
+      }
     }
   </script>
 </body>
