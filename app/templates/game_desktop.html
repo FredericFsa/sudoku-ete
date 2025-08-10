@@ -5,74 +5,557 @@
   <title>Sudoku - {{ difficulty }}</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
+    {% set size = grid|length %}
+    
     body {
       background: linear-gradient(to right, #fffde7, #e0f7fa);
       font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      overflow: hidden;
     }
 
+    /* ===== FRAME FIXE POUR TITRE + BOUTONS ===== */
+    .control-frame {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      {% if size >= 25 %}
+      height: 100px;
+      padding: 8px 15px;
+      {% elif size >= 16 %}
+      height: 110px;
+      padding: 12px 20px;
+      {% else %}
+      height: 120px;
+      padding: 15px 20px;
+      {% endif %}
+      background: linear-gradient(135deg, 
+        rgba(255, 255, 255, 0.98) 0%, 
+        rgba(255, 253, 231, 0.98) 30%, 
+        rgba(224, 247, 250, 0.98) 70%, 
+        rgba(255, 255, 255, 0.98) 100%);
+      backdrop-filter: blur(10px);
+      border-bottom: 3px solid rgba(2, 119, 189, 0.3);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1), 
+                  0 1px 3px rgba(2, 119, 189, 0.2);
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: hidden;
+    }
+
+    /* Titre + Copyright en haut de la frame de contrôle */
+    .title-section {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
+      {% if size >= 25 %}
+      margin-bottom: 5px;
+      {% elif size >= 16 %}
+      margin-bottom: 8px;
+      {% else %}
+      margin-bottom: 10px;
+      {% endif %}
+    }
+
+    .title-section h2 {
+      {% if size >= 25 %}
+      font-size: 1.4rem;
+      margin: 0 10px 0 0;
+      {% elif size >= 16 %}
+      font-size: 1.6rem;
+      margin: 0 12px 0 0;
+      {% else %}
+      font-size: 1.8rem;
+      margin: 0 15px 0 0;
+      {% endif %}
+      color: #0277bd;
+    }
+
+    .title-section small {
+      color: #666;
+      {% if size >= 25 %}
+      font-size: 0.8rem;
+      {% else %}
+      font-size: 0.9rem;
+      {% endif %}
+    }
+
+    /* Boutons dans le bas de la frame de contrôle */
+    .buttons-section {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      {% if size >= 25 %}
+      gap: 5px;
+      {% elif size >= 16 %}
+      gap: 6px;
+      {% else %}
+      gap: 8px;
+      {% endif %}
+    }
+
+    .buttons-section .btn {
+      {% if size >= 25 %}
+      font-size: 0.75rem;
+      padding: 4px 8px;
+      {% elif size >= 16 %}
+      font-size: 0.8rem;
+      padding: 5px 10px;
+      {% else %}
+      font-size: 0.9rem;
+      padding: 6px 12px;
+      {% endif %}
+      border-radius: 5px;
+    }
+
+    /* ===== FRAME SCROLLABLE POUR LA GRILLE ===== */
+    .game-frame {
+      position: fixed;
+      {% if size >= 25 %}
+      top: 100px;
+      padding: 30px 20px 20px 20px;
+      {% elif size >= 16 %}
+      top: 110px;
+      padding: 25px 20px 20px 20px;
+      {% else %}
+      top: 120px;
+      padding: 20px;
+      {% endif %}
+      left: 0;
+      right: 0;
+      bottom: 0;
+      overflow: auto;
+      text-align: center;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      {% if size >= 25 %}
+      min-height: calc(100vh - 100px);
+      {% elif size >= 16 %}
+      min-height: calc(100vh - 110px);
+      {% else %}
+      min-height: calc(100vh - 120px);
+      {% endif %}
+    }
+
+    /* Loading dans la frame de jeu - ajusté pour le padding */
+    #loading {
+      font-weight: bold;
+      color: #0277bd;
+      position: absolute;
+      {% if size >= 25 %}
+      top: 35px;
+      {% elif size >= 16 %}
+      top: 30px;
+      {% else %}
+      top: 25px;
+      {% endif %}
+      left: 50%;
+      transform: translateX(-50%);
+      display: none;
+    }
+
+    /* ===== STYLES DE LA GRILLE ===== */
     table {
       margin: auto;
       border-collapse: collapse;
+      border: none;
     }
 
-    .top-block    { border-top:    2px solid #000 !important; }
-    .left-block   { border-left:   2px solid #000 !important; }
-    .bottom-block { border-bottom: 2px solid #000 !important; }
-    .right-block  { border-right:  2px solid #000 !important; }
+    .top-block    { border-top:    3px solid #000 !important; }
+    .left-block   { border-left:   3px solid #000 !important; }
+    .bottom-block { border-bottom: 3px solid #000 !important; }
+    .right-block  { border-right:  3px solid #000 !important; }
 
     td {
       width: 40px; height: 40px;
       text-align: center;
       vertical-align: middle;
-      border: 1px solid #ccc;
+      border: 1px solid #999;
       font-size: 18px;
       background-color: #fff;
+      position: relative;
     }
+
+    {% if size >= 25 %}
+    td {
+      width: 35px !important; 
+      height: 35px !important;
+      font-size: 16px !important;
+      border: 0.5px solid #bbb;
+    }
+    .sudoku-wrapper {
+      border: 3px solid #000 !important;
+      padding: 0 !important;
+    }
+    {% elif size >= 16 %}
+    td {
+      width: 42px !important; 
+      height: 42px !important;
+      font-size: 18px !important;
+      border: 1px solid #999;
+    }
+    .sudoku-wrapper {
+      border: 3px solid #000 !important;
+      padding: 0 !important;
+    }
+    {% endif %}
 
     input {
       width: 100%;
       height: 100%;
       text-align: center;
       border: none;
-      font-size: 18px;
       background-color: #e0f7fa;
+      {% if size >= 25 %}
+      font-size: 16px !important;
+      {% elif size >= 16 %}
+      font-size: 18px !important;
+      {% else %}
+      font-size: 18px;
+      {% endif %}
     }
 
     input:focus {
       outline: none;
       background-color: #b2ebf2;
+      box-shadow: inset 0 0 5px rgba(2, 119, 189, 0.3);
     }
 
     .fixed {
       font-weight: bold;
       color: #0277bd;
+      {% if size >= 25 %}
+      font-size: 16px !important;
+      {% elif size >= 16 %}
+      font-size: 18px !important;
+      {% endif %}
     }
 
     .sudoku-wrapper {
       display: inline-block;
-      border: 4px solid #000;
-      padding: 2px;
+      border: 3px solid #000;
+      padding: 0;
+      background: white;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
     }
 
-    #loading {
-      font-weight: bold;
-      color: #0277bd;
-      margin-top: 1rem;
-      display: none;
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 768px) {
+      .control-frame {
+        {% if size >= 25 %}
+        height: 120px;
+        padding: 8px 10px;
+        {% elif size >= 16 %}
+        height: 130px;
+        padding: 10px 12px;
+        {% else %}
+        height: 140px;
+        padding: 10px 15px;
+        {% endif %}
+      }
+      
+      .title-section h2 {
+        {% if size >= 25 %}
+        font-size: 1.2rem;
+        {% elif size >= 16 %}
+        font-size: 1.3rem;
+        {% else %}
+        font-size: 1.4rem;
+        {% endif %}
+      }
+      
+      .buttons-section .btn {
+        {% if size >= 25 %}
+        font-size: 0.7rem;
+        padding: 3px 6px;
+        {% elif size >= 16 %}
+        font-size: 0.75rem;
+        padding: 4px 7px;
+        {% else %}
+        font-size: 0.8rem;
+        padding: 5px 8px;
+        {% endif %}
+      }
+      
+      .game-frame {
+        {% if size >= 25 %}
+        top: 120px;
+        padding: 25px 10px 15px 10px;
+        {% elif size >= 16 %}
+        top: 130px;
+        padding: 20px 10px 15px 10px;
+        {% else %}
+        top: 140px;
+        padding: 15px 10px;
+        {% endif %}
+      }
+      
+      {% if size >= 25 %}
+      td {
+        width: 28px !important; 
+        height: 28px !important;
+        font-size: 14px !important;
+      }
+      {% elif size >= 16 %}
+      td {
+        width: 32px !important; 
+        height: 32px !important;
+        font-size: 16px !important;
+      }
+      {% endif %}
     }
 
+    /* ===== PRINT STYLES - GRILLES VIDES SEULEMENT ===== */
     @media print {
-    .no-print, .no-print * {
-      display: none !important;
+      * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      
+      .control-frame, .no-print, .no-print *, #loading {
+        display: none !important;
+      }
+      
+      html, body {
+        width: 100% !important;
+        height: auto !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        background: white !important;
+        overflow: visible !important;
+        transform: none !important;
+        font-family: Arial, sans-serif !important;
+      }
+      
+      @page {
+        size: A4;
+        margin: 15mm;
+      }
+      
+      /* AJOUT: Titre pour impression grilles vides */
+      .game-frame::before {
+        content: "🧩 Sudoku {{ size }}x{{ size }} - Niveau {{ difficulty|capitalize }}";
+        display: block !important;
+        text-align: center !important;
+        font-size: 16pt !important;
+        font-weight: bold !important;
+        margin-bottom: 10mm !important;
+        color: #000 !important;
+      }
+      
+      /* AJOUT: Copyright pour impression grilles vides */
+      .game-frame::after {
+        content: "© 2025 Frédéric SALERNO. Tous droits réservés.";
+        display: block !important;
+        text-align: center !important;
+        font-size: 10pt !important;
+        margin-top: 10mm !important;
+        color: #666 !important;
+      }
+      
+      .game-frame {
+        position: static !important;
+        top: auto !important;
+        left: auto !important;
+        right: auto !important;
+        bottom: auto !important;
+        width: 100% !important;
+        height: auto !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        overflow: visible !important;
+        display: block !important;
+        text-align: center !important;
+        transform: none !important;
+      }
+      
+      .sudoku-wrapper {
+        display: table !important;
+        margin: 0 auto !important;
+        border: 3px solid #000 !important;
+        padding: 0 !important;
+        background: white !important;
+        box-shadow: none !important;
+        transform: none !important;
+      }
+      
+      table {
+        border-collapse: collapse !important;
+        border-spacing: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        background: white !important;
+        transform: none !important;
+      }
+      
+      {% if size >= 25 %}
+      /* Grille vide 25x25 - LIGNES FINES VISIBLES, BLOCS NORMAUX */
+      td {
+        width: 5mm !important;
+        height: 5mm !important;
+        min-width: 5mm !important;
+        min-height: 5mm !important;
+        max-width: 5mm !important;
+        max-height: 5mm !important;
+        font-size: 6pt !important;
+        line-height: 5mm !important;
+        border: 1.2mm solid #000 !important;
+        text-align: center !important;
+        vertical-align: middle !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        background: white !important;
+      }
+      
+      input {
+        width: 5mm !important;
+        height: 5mm !important;
+        font-size: 6pt !important;
+        line-height: 5mm !important;
+        text-align: center !important;
+        border: none !important;
+        background: transparent !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        -webkit-appearance: none !important;
+        appearance: none !important;
+      }
+      
+      .fixed {
+        font-size: 6pt !important;
+        font-weight: bold !important;
+        color: #000 !important;
+      }
+      
+      .top-block { border-top: 1.8mm solid #000 !important; }
+      .left-block { border-left: 1.8mm solid #000 !important; }
+      .bottom-block { border-bottom: 1.8mm solid #000 !important; }
+      .right-block { border-right: 1.8mm solid #000 !important; }
+      
+      {% elif size >= 16 %}
+      /* Grille vide 16x16 - BORDURES TRÈS ÉPAISSES */
+      td {
+        width: 8mm !important;
+        height: 8mm !important;
+        min-width: 8mm !important;
+        min-height: 8mm !important;
+        max-width: 8mm !important;
+        max-height: 8mm !important;
+        font-size: 10pt !important;
+        line-height: 8mm !important;
+        border: 1mm solid #000 !important;
+        text-align: center !important;
+        vertical-align: middle !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        background: white !important;
+      }
+      
+      input {
+        width: 8mm !important;
+        height: 8mm !important;
+        font-size: 10pt !important;
+        line-height: 8mm !important;
+        text-align: center !important;
+        border: none !important;
+        background: transparent !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        -webkit-appearance: none !important;
+        appearance: none !important;
+      }
+      
+      .fixed {
+        font-size: 10pt !important;
+        font-weight: bold !important;
+        color: #000 !important;
+      }
+      
+      .top-block { border-top: 2mm solid #000 !important; }
+      .left-block { border-left: 2mm solid #000 !important; }
+      .bottom-block { border-bottom: 2mm solid #000 !important; }
+      .right-block { border-right: 2mm solid #000 !important; }
+      
+      {% else %}
+      /* Grille vide 9x9 et 4x4 - BORDURES VISIBLES */
+      td {
+        width: 12mm !important;
+        height: 12mm !important;
+        min-width: 12mm !important;
+        min-height: 12mm !important;
+        max-width: 12mm !important;
+        max-height: 12mm !important;
+        font-size: 14pt !important;
+        line-height: 12mm !important;
+        border: 0.8mm solid #666 !important;
+        text-align: center !important;
+        vertical-align: middle !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        background: white !important;
+      }
+      
+      input {
+        width: 12mm !important;
+        height: 12mm !important;
+        font-size: 14pt !important;
+        line-height: 12mm !important;
+        text-align: center !important;
+        border: none !important;
+        background: transparent !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        -webkit-appearance: none !important;
+        appearance: none !important;
+      }
+      
+      .fixed {
+        font-size: 14pt !important;
+        font-weight: bold !important;
+        color: #000 !important;
+      }
+      
+      .top-block { border-top: 2mm solid #000 !important; }
+      .left-block { border-left: 2mm solid #000 !important; }
+      .bottom-block { border-bottom: 2mm solid #000 !important; }
+      .right-block { border-right: 2mm solid #000 !important; }
+      {% endif %}
     }
   </style>
 </head>
-<body class="p-4 text-center">
-  <h2 class="mb-4">🧩 Sudoku - Niveau {{ difficulty|capitalize }}</h2>
+<body>
+  <!-- ===== FRAME FIXE - TITRE + BOUTONS ===== -->
+  <div class="control-frame no-print">
+    <!-- Titre + Copyright -->
+    <div class="title-section">
+      <h2>🧩 Sudoku - Niveau {{ difficulty|capitalize }}</h2>
+      <small>© 2025 Frédéric SALERNO</small>
+    </div>
+    
+    <!-- Boutons de contrôle -->
+    <div class="buttons-section">
+      <button onclick="checkSolution()" class="btn btn-success">✅ Vérifier</button>
+      <button onclick="checkIfComplete()" class="btn btn-warning">🔍 Complète ?</button>
+      <button onclick="showSolution()" class="btn btn-info">🧠 Solution</button>
+      <button onclick="clearGrid()" class="btn btn-secondary">🧹 Effacer</button>
+      <button onclick="perfectPrintEmpty()" class="btn btn-dark">🖨️ Imprimer</button>
+      <button onclick="printSolution()" class="btn btn-primary">🖨️ Solution</button>
+      <a href="/" class="btn btn-danger">🔄 Nouvelle partie</a>
+    </div>
+  </div>
 
-  <div class="table-responsive">
+  <!-- ===== FRAME SCROLLABLE - GRILLE SEULE ===== -->
+  <div class="game-frame">
+    <div id="loading">⏳ Calcul de la solution en cours...</div>
+    
     <div class="sudoku-wrapper">
-      {% set size = grid|length %}
       {% set block_size = (size ** 0.5)|round|int %}
       <table>
         {% for row in grid %}
@@ -99,21 +582,9 @@
     </div>
   </div>
 
-  <div id="loading">⏳ Calcul de la solution en cours...</div>
-
-  <div class="no-print mt-4 d-flex justify-content-center flex-wrap gap-2">
-    <button onclick="checkSolution()" class="btn btn-success">✅ Vérifier la grille</button>
-    <button onclick="checkIfComplete()" class="btn btn-warning">🔍 Est-elle complète ?</button>
-    <button onclick="showSolution()" class="btn btn-info">🧠 Afficher la solution</button>
-    <button onclick="clearGrid()" class="btn btn-secondary">🧹 Effacer la grille</button>
-    <button onclick="window.print()" class="btn btn-dark">🖨️ Imprimer la grille</button>
-    <button onclick="printSolution()" class="btn btn-primary">🖨️ Imprimer la solution</button>
-    <a href="/" class="btn btn-danger">🔄 Nouvelle partie</a>
-  </div>
-
-  <footer class="mt-5 text-muted">© 2025 Frédéric SALERNO. Tous droits réservés.</footer>
-
   <script>
+    const GRID_SIZE = {{ size }};
+    
     async function checkSolution() {
       const grid = extractGrid();
       const response = await fetch('/check', {
@@ -201,92 +672,156 @@
       }
       return grid;
     }
+ 
+	function perfectPrintEmpty() {
+		window.open('/perfect-print-empty', '_blank');
+	}
 
-    async function printSolution() {
-	  const response = await fetch('/solution');
-	  const result = await response.json();
-	  const solved = result.solution;
+	function perfectPrintSolution() {
+		// Récupérer solution et appeler /perfect-print-solution
+	}
+	async function printSolution() {
+	  try {
+		const resp = await fetch('/solution');
+		if (!resp.ok) throw new Error('Solveur indisponible');
+		const data = await resp.json();
+		const solution = data.solution;
+		const size = Array.isArray(solution) ? solution.length : (typeof GRID_SIZE !== 'undefined' ? GRID_SIZE : {{ size }});
+		const difficulty = (typeof DIFFICULTY !== 'undefined') ? DIFFICULTY : "{{ difficulty }}";
 
-	  const iframe = document.createElement("iframe");
-	  iframe.style.display = "none";
-	  document.body.appendChild(iframe);
+		const htmlResp = await fetch('/perfect-print-solution', {
+		  method: 'POST',
+		  headers: { 'Content-Type': 'application/json' },
+		  body: JSON.stringify({ grid: solution, size, difficulty })
+		});
+		if (!htmlResp.ok) throw new Error('Imprimeur serveur indisponible');
+		const html = await htmlResp.text();
 
-	  const doc = iframe.contentDocument || iframe.contentWindow.document;
-	  doc.open();
-	  doc.write(`
-		<html>
-		<head>
-		  <title>Impression de la solution</title>
-		  <style>
-			body {
-			  font-family: 'Segoe UI', sans-serif;
-			  text-align: center;
-			  padding: 30px;
-			}
-			.sudoku-wrapper {
-			  display: inline-block;
-			  border: 4px solid #000;
-			  padding: 2px;
-			}
-			table {
-			  border-collapse: collapse;
-			  margin: auto;
-			}
-			td {
-			  width: 40px;
-			  height: 40px;
-			  text-align: center;
-			  vertical-align: middle;
-			  border: 1px solid #ccc;
-			  font-size: 18px;
-			  background-color: #fff;
-			}
-			.top-block    { border-top:    2px solid #000 !important; }
-			.left-block   { border-left:   2px solid #000 !important; }
-			.bottom-block { border-bottom: 2px solid #000 !important; }
-			.right-block  { border-right:  2px solid #000 !important; }
-			footer {
-			  margin-top: 40px;
-			  color: #888;
-			  font-size: 14px;
-			}
-		  </style>
-		</head>
-		<body>
-		  <h2>🧠 Solution du Sudoku</h2>
-		  <div class="sudoku-wrapper">
-			<table>
-			  ${solved.map((row, r) => `
-				<tr>
-				  ${row.map((val, c) => {
-					const size = solved.length;
-					const blockSize = Math.sqrt(size);
-					const classes = [
-					  (r % blockSize === 0 ? 'top-block' : ''),
-					  (c % blockSize === 0 ? 'left-block' : ''),
-					  (r === size - 1 ? 'bottom-block' : ''),
-					  (c === size - 1 ? 'right-block' : '')
-					].join(' ');
-					const symbol = val <= 9 ? val.toString() : String.fromCharCode(55 + val);
-					return `<td class="${classes}">${symbol}</td>`;
-				  }).join('')}
-				</tr>
-			  `).join('')}
-			</table>
-		  </div>
-		  <footer>© 2025 Frédéric SALERNO. Tous droits réservés.</footer>
-		  <script>
-			window.onload = function() {
-			  window.print();
-			};
-		  <\/script>
-		</body>
-		</html>
-	  `);
-	  doc.close();
-	  setTimeout(() => document.body.removeChild(iframe), 2000);
+		const w = window.open('', '_blank', 'noopener,noreferrer');
+		if (!w) { alert("Autorisez les pop-ups pour l'impression."); return; }
+		w.document.open(); w.document.write(html); w.document.close();
+	  } catch (e) {
+		console.error(e);
+		alert("❌ Impossible d'imprimer la solution.");
+	  }
 	}
 
   </script>
+  <script>
+(function(){
+  function blockSize(n){ return Math.round(Math.sqrt(n)); }
+  function gridToBracketed(grid){
+    const n = grid.length, B = blockSize(n);
+    return grid.map(row => {
+      const digits = row.map(v => (v||0)).join("");
+      const parts = [];
+      for (let i=0; i<n; i+=B) parts.push("[" + digits.slice(i,i+B).padEnd(B,"0") + "]");
+      return parts.join("");
+    }).join("\n");
+  }
+  function openText(text){
+    const w = window.open("", "_blank", "noopener,noreferrer");
+    if(!w){ alert("Autorisez les pop-ups."); return; }
+    w.document.open();
+    w.document.write('<!doctype html><meta charset="utf-8"><pre style="font:16px/1.5 monospace;white-space:pre;">'+text+'</pre>');
+    w.document.close();
+  }
+  function getCurrentSize(){
+    const rows = document.querySelectorAll(".sudoku-wrapper table tr").length;
+    return rows || (typeof GRID_SIZE !== "undefined" ? Number(GRID_SIZE) : 9);
+  }
+  async function getSolution(){
+    const r = await fetch("/solution");
+    if (!r.ok) throw new Error("Solution indisponible");
+    const d = await r.json();
+    if (!d || !Array.isArray(d.solution)) throw new Error("Format /solution invalide");
+    return d.solution;
+  }
+
+  function attach(){
+    const emptyBtn = document.querySelector('button[onclick="perfectPrintEmpty()"]');
+    const solBtn   = document.querySelector('button[onclick="printSolution()"]');
+
+    if (emptyBtn){
+      emptyBtn.addEventListener("click", function(ev){
+        ev.preventDefault(); ev.stopImmediatePropagation();
+        const n = getCurrentSize();
+        const empty = Array.from({length:n},()=>Array(n).fill(0));
+        openText(gridToBracketed(empty));
+        return false;
+      }, true); // capture: on passe avant l’onclick inline
+    }
+
+    if (solBtn){
+      solBtn.addEventListener("click", async function(ev){
+        ev.preventDefault(); ev.stopImmediatePropagation();
+        try{
+          const solution = await getSolution();
+          openText(gridToBracketed(solution));
+        }catch(e){
+          console.error(e); alert("Impossible d'afficher la solution.");
+        }
+        return false;
+      }, true);
+    }
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", attach);
+  } else {
+    attach();
+  }
+})();
+</script>
+<iframe id="pretty-frame"
+        src="/pretty"
+        style="position:absolute;left:-9999px;top:-9999px;width:0;height:0;border:0;"></iframe>
+<script>
+(function(){
+  const frame = document.getElementById('pretty-frame');
+
+  function pushToPretty(data, autoPrint=true){
+    function go(){
+      const w = frame?.contentWindow;
+      if (w && w.prettyGrid) {
+        if (Array.isArray(data)) w.prettyGrid.render(data);
+        else w.prettyGrid.renderFromBracketed(data);
+        if (autoPrint) { try { w.focus(); } catch(_) {} w.prettyGrid.print(); }
+      } else {
+        setTimeout(go, 40);
+      }
+    }
+    go();
+  }
+
+  // Bouton “Imprimer” → on envoie la grille d’ORIGINE (givens)
+  document.addEventListener('click', function(ev){
+    const btn = ev.target.closest('#btn-print-empty,[onclick*="perfectPrintEmpty"],[onclick*="printEmptyGrid"]');
+    if (!btn) return;
+    ev.preventDefault(); ev.stopImmediatePropagation();
+    const grid = (typeof window.extractOriginalGrid==='function')
+      ? window.extractOriginalGrid()
+      : (typeof window.extractGrid==='function' ? window.extractGrid() : []);
+    pushToPretty(grid, true);
+    return false;
+  }, true);
+
+  // Bouton “Solution” → on envoie la SOLUTION (fallback = grille courante)
+  document.addEventListener('click', async function(ev){
+    const btn = ev.target.closest('#btn-print-solution,[onclick*="printSolution"]');
+    if (!btn) return;
+    ev.preventDefault(); ev.stopImmediatePropagation();
+    let solved = null;
+    try {
+      const r = await fetch('/solution', { cache: 'no-store' });
+      if (r.ok) { const d = await r.json(); solved = d.solution || d.grid || d.solved; }
+    } catch(_) {}
+    if (!solved && typeof window.extractGrid==='function') solved = window.extractGrid();
+    pushToPretty(solved, true);
+    return false;
+  }, true);
+})();
+</script>
+
 </body>
 </html>
