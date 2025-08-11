@@ -1,214 +1,147 @@
-# Impression “jolie” des grilles Sudoku (via iframe `/pretty`)
+![Render Live](https://img.shields.io/badge/Render-Live-brightgreen?logo=render&style=for-the-badge)
+![Python](https://img.shields.io/badge/python-3.11-blue?logo=python&style=for-the-badge)
+![Flask](https://img.shields.io/badge/Flask-3.1.1-lightgrey?logo=flask&style=for-the-badge)
+![License](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)
+[![GitHub stars](https://img.shields.io/github/stars/FredericFsa/sudoku-ete?style=for-the-badge)](https://github.com/FredericFsa/sudoku-ete/stargazers)
+[![GitHub issues](https://img.shields.io/github/issues/FredericFsa/sudoku-ete?style=for-the-badge)](https://github.com/FredericFsa/sudoku-ete/issues)
 
-Ce module ajoute une impression **propre, centrée, une seule page** pour vos grilles **4×4 / 9×9 / 16×16 / 25×25**, avec **titre** en haut et **copyright** en bas.  
-L’intégration se fait via une **page d’impression minimaliste** (`pretty_print_lite.html`) chargée dans une **iframe cachée** et pilotée depuis votre page de jeu.
 
----
+# 🧩 Sudoku Été
 
-## 1) Prérequis
-
-- Python / Flask (ou équivalent Jinja).
-- Vos routes habituelles, dont (optionnel) `/solution` renvoyant la solution sous forme de matrice.
-- Vos fonctions côté front (si existantes) :
-  - `extractOriginalGrid()` → matrice des “givens” (0 pour vide, 1..9, 10=A, …35=Z)
-  - `extractGrid()` → matrice de la grille affichée
+**Sudoku Été** est une application web interactive permettant de jouer à des grilles de Sudoku de différentes tailles (4×4, 9×9, 16×16 et 25×25), avec plusieurs niveaux de difficulté.  
+Le jeu est accessible depuis tous les appareils (PC, tablette, mobile) et intègre des fonctionnalités avancées comme la vérification, l'affichage de la solution, l'effacement rapide et l'impression optimisée.
 
 ---
 
-## 2) Fichiers utiles
+## 🌐 Démo en ligne
+Application disponible ici : **https://sudoku-ete.onrender.com/**
+
+---
+
+## ✨ Fonctionnalités
+
+- 🎯 **Choix de la taille et de la difficulté** dès l'accueil (restrictions adaptées pour 16×16 et 25×25).
+- 📱 **Interface responsive** optimisée pour desktop et mobile (titres/boutons fixes, zone de jeu scrollable).
+- ✅ **Vérification** de la grille (côté serveur), avec **fallback local**.
+- 🔍 **Contrôle rapide** si la grille est entièrement remplie.
+- 🧠 **Affichage de la solution** sur demande (résolution en tâche de fond, timeout adaptatif).
+- 🧹 **Effacement rapide** de toutes les entrées.
+- 🖨 **Mode impression** : grille vide ou solution, avec styles HTML/CSS dédiés.
+- 🎨 **Design estival** avec fond en dégradé doux.
+
+---
+
+## 📂 Structure du projet (suggestion)
 
 ```
 app/
-├─ templates/
-│  ├─ game_desktop.html             # votre écran de jeu
-│  └─ pretty_print_lite.html        # page d’impression minimaliste (voir §4)
-└─ static/
-   └─ js/ …                        # vos scripts existants
+├── __init__.py                      # Initialisation Flask (clé secrète à mettre en variable d'env)
+├── routes.py                        # Routes web & API (start, check, solution, print...)
+├── sudoku.py                        # Génération & résolution (solveur optimisé pour 9×9/16×16/25×25)
+├── print_styles.py                  # Pages HTML/CSS d'impression (grille/solution)
+├── run.py                           # Point d'entrée (logs propres, arrêt propre)
+│
+├── templates/
+│   ├── index_desktop.html           # Accueil desktop
+│   ├── index_mobile.html            # Accueil mobile
+│   ├── game_desktop.html            # Jeu desktop (frame commandes + frame grille)
+│   ├── game_mobile.html             # Jeu mobile (grille CSS Grid)
+│   └── sudoku_grids_centered_print_random_fill_fixed.html  # Impression “jolie” via prettyGrid
+│
+├── static/
+│   └── sudoku_game_js.js            # Logique front-end (navigation, vérifs, impression)
+│
+├── requirements.txt                 # Dépendances Python
+└── render.yaml                      # Configuration Render.com
 ```
 
-**`pretty_print_lite.html`** expose l’API (côté iframe) :
+> ℹ️ Selon ton repo actuel, les fichiers peuvent être à la racine. La structure ci‑dessus correspond à l’organisation recommandée.
 
-```js
-window.prettyGrid = {
-  render(grid),            // matrice [[...],[...]]
-  renderFromBracketed(txt),// texte "[005][043]...\n[...]"
-  setHeader(meta),         // { title, size, difficulty, date, copyright }
-  print()                  // lance l’impression
-};
+---
+
+## ⚙️ Installation locale
+
+### 1) Cloner le dépôt
+```bash
+git clone https://github.com/<ton-utilisateur>/<ton-repo>.git
+cd <ton-repo>
+```
+
+### 2) Environnement virtuel
+```bash
+python -m venv venv
+# Linux / macOS
+source venv/bin/activate
+# Windows
+venv\Scripts\activate
+```
+
+### 3) Dépendances
+```bash
+pip install -r requirements.txt
+```
+
+### 4) Variables d’environnement (recommandé)
+```bash
+# à adapter à ton shell
+export FLASK_ENV=production
+export SECRET_KEY="change-me"
+```
+
+### 5) Lancer en dev
+```bash
+python run.py
+```
+Application disponible sur **http://127.0.0.1:5000**.
+
+### 6) Lancer en prod (Gunicorn)
+```bash
+gunicorn -w 4 -b 0.0.0.0:5000 run:app
 ```
 
 ---
 
-## 3) Route Flask
+## 🚀 Déploiement sur Render
 
-Dans `app/routes.py` :
+Le projet inclut `render.yaml`. Pour déployer :  
+1. Crée un service **Web Service** sur [Render](https://render.com/).  
+2. Connecte ton dépôt GitHub.  
+3. Render installe les dépendances via `requirements.txt` et lance la commande définie (ex. `gunicorn run:app`).  
+4. Configure les variables **SECRET_KEY** et **FLASK_ENV** dans l’onglet *Environment*.  
 
-```python
-from flask import render_template
+👉 Démonstration déployée : **https://sudoku-ete.onrender.com/**
 
-@app.route("/pretty")
-def pretty():
-    return render_template("pretty_print_lite.html")
+---
+
+## 🧪 Endpoints principaux
+
+- `GET /` – accueil (détection mobile/desktop).  
+- `POST /start` – génère une grille selon taille/difficulté.  
+- `POST /check` – vérifie une grille soumise.  
+- `GET /solution` – calcule/renvoie la solution (timeout adaptatif).  
+- `GET /perfect-print-empty` – page d’impression de la **grille**.  
+- `POST /perfect-print-solution` – page d’impression de la **solution**.  
+
+---
+
+## 🔐 Sécurité & bonnes pratiques
+
+- **SECRET_KEY** : ne pas laisser en dur dans `__init__.py`; utiliser une variable d’environnement.  
+- **Validation** : revalider serveur toutes les entrées (taille, contenu de grille).  
+- **CSRF** : si tu ajoutes des formulaires POST supplémentaires, penser à activer une protection CSRF (Flask‑WTF).
+
+---
+
+## 🖼 Captures d’écran (optionnel)
+
+Place des images dans `docs/` puis référence-les :  
+```markdown
+![Accueil](docs/sudoku_home.png)
+![Partie](docs/sudoku_game.png)
 ```
 
 ---
 
-## 4) Page d’impression “Lite” (à créer)
+## 📄 Licence
 
-Créez `app/templates/pretty_print_lite.html` avec le contenu fourni séparément (ou copiez-le depuis ce repo si présent).  
-Cette page ne contient **aucun contrôle UI**, uniquement **header + grille + footer** et le CSS **print**.
-
----
-
-## 5) Intégration front (sans pop-up)
-
-Dans `app/templates/game_desktop.html`, juste avant `</body>` :
-
-```html
-<!-- 1) IFRAME cachée vers /pretty -->
-<iframe id="pretty-frame" src="/pretty"
-        style="position:absolute;left:-9999px;top:-9999px;width:0;height:0;border:0;"></iframe>
-
-<!-- 2) Pont d’impression : envoie les données + méta à l’iframe, lance print() -->
-<script>
-(function(){
-  const frame = document.getElementById('pretty-frame');
-
-  function pushToPretty(data, meta, autoPrint=true){
-    function go(){
-      const w = frame?.contentWindow;
-      if (w && w.prettyGrid){
-        // 1) grille
-        if (Array.isArray(data)) w.prettyGrid.render(data);
-        else w.prettyGrid.renderFromBracketed(data);
-        // 2) en-tête
-        if (meta) w.prettyGrid.setHeader(meta);
-        // 3) impression
-        if (autoPrint){ try{ w.focus(); }catch(_){} w.prettyGrid.print(); }
-      } else {
-        setTimeout(go, 40); // attend que /pretty soit prêt
-      }
-    }
-    go();
-  }
-
-  // Bouton “Imprimer” -> givens (grille d’origine)
-  document.addEventListener('click', async (ev) => {
-    const btn = ev.target.closest('#btn-print-empty,[onclick*="perfectPrintEmpty"],[onclick*="printEmptyGrid"]');
-    if (!btn) return;
-    ev.preventDefault(); ev.stopImmediatePropagation();
-
-    const grid = (typeof window.extractOriginalGrid==='function')
-      ? window.extractOriginalGrid()
-      : (typeof window.extractGrid==='function' ? window.extractGrid() : []);
-
-    const n = Array.isArray(grid) ? grid.length : 9;
-    const meta = {
-      title: `Sudoku ${n}×${n}`,
-      size:  `${n}×${n}`,
-      difficulty: (window.DIFFICULTY||'').toString(),
-      date: new Date().toLocaleDateString('fr-BE'),
-      copyright: '© 2025 MonApp'
-    };
-    pushToPretty(grid, meta, true);
-    return false;
-  }, true);
-
-  // Bouton “Imprimer Solution”
-  document.addEventListener('click', async (ev) => {
-    const btn = ev.target.closest('#btn-print-solution,[onclick*="printSolution"]');
-    if (!btn) return;
-    ev.preventDefault(); ev.stopImmediatePropagation();
-
-    let solved = null;
-    try{
-      const r = await fetch('/solution', { cache: 'no-store' });
-      if (r.ok){ const d = await r.json(); solved = d.solution || d.grid || d.solved; }
-    }catch(_){}
-    if (!solved && typeof window.extractGrid==='function') solved = window.extractGrid();
-
-    const n = Array.isArray(solved) ? solved.length : 9;
-    const meta = {
-      title: `Sudoku ${n}×${n} — Solution`,
-      size:  `${n}×${n}`,
-      difficulty: (window.DIFFICULTY||'').toString(),
-      date: new Date().toLocaleDateString('fr-BE'),
-      copyright: '© 2025 MonApp'
-    };
-    pushToPretty(solved, meta, true);
-    return false;
-  }, true);
-})();
-</script>
-```
-
-> **Important :** on n’utilise plus `window.open()` ⇒ **aucun pop-up**.  
-> L’impression part depuis **l’iframe**.
-
----
-
-## 6) Formats de données acceptés
-
-- **Matrice** `number[][]`  
-  - `0` = vide  
-  - `1..9` = chiffres  
-  - `10..35` = `A..Z` (pour 16×16, 25×25)
-- **Texte bracketé** :
-  ```
-  [005][043][000]
-  [400][208][056]
-  [002][507][304]
-  ...
-  ```
-
----
-
-## 7) Personnalisation rapide
-
-- **Titre/détails**: envoyez `meta` à `setHeader` (voir §5).
-- **Copyright**: changez la valeur `© 2025 MonApp`.
-- **Marge papier**: dans `pretty_print_lite.html`, règle `@page { margin: 10mm; }`.
-- **Taille des cases (print)**: ajustez `table.sudoku td { width:24px; height:24px; font-size:14px; }`
-  - *Mode compact 25×25 (option)* :
-    ```css
-    @media print {
-      /* décommentez si n > 16 (à détecter côté app si besoin) */
-      /* table.sudoku td { width:22px; height:22px; font-size:13px; } */
-    }
-    ```
-
----
-
-## 8) Dépannage
-
-- **/pretty en 404**  
-  → Vérifiez la route Flask et que `pretty_print_lite.html` est bien dans `app/templates/`.
-
-- **Rien ne s’imprime / modal de pop-up**  
-  → Un ancien code `window.open` traîne. L’interception de clics (voir §5) doit empêcher tout pop-up.  
-  → Vérifiez que l’iframe existe : dans la console, `!!document.getElementById('pretty-frame').contentWindow` doit renvoyer `true`.
-
-- **Deux pages à l’impression**  
-  → La page Lite inclut un CSS print qui **neutralise** les hauteurs plein écran et **centre**.  
-  → Si un navigateur ajoute une page blanche, baissez **très légèrement** l’échelle :
-    ```css
-    .canvas { transform: scale(0.985); }
-    ```
-
-- **Lettres manquantes sur 16×16 / 25×25**  
-  → Les valeurs `10..35` sont rendues comme `A..Z`. Assurez-vous d’envoyer **des nombres**, pas des lettres, côté matrice (la page se charge de l’affichage).
-
----
-
-## 9) Licence
-
-Au choix. Si vous n’avez pas encore de licence, ajoutez un `LICENSE` (MIT par exemple).
-
----
-
-## 10) Résumé
-
-- `/pretty` charge **`pretty_print_lite.html`** (ultra léger).  
-- **Iframe cachée** dans `game_desktop.html`.  
-- Les boutons **Imprimer** / **Solution** envoient la **grille + méta** vers l’iframe, qui **rend** et **imprime**.  
-- **Zéro pop-up**, **1 seule page**, **centré** et **propre**.
+© 2025 Frédéric SALERNO. Tous droits réservés.
